@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>わたしの習慣トラッカー</title>
+<style>
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+    background: #f5f5f5;
+    display: flex;
+    justify-content: center;
+    padding: 40px 16px;
+    margin: 0;
+  }
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 24px 28px;
+    width: 100%;
+    max-width: 360px;
+  }
+  h1 {
+    font-size: 20px;
+    margin: 0 0 4px;
+    text-align: center;
+  }
+  .date {
+    text-align: center;
+    color: #888;
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  li {
+    display: flex;
+    align-items: center;
+    padding: 12px 8px;
+    border-bottom: 1px solid #eee;
+  }
+  li:last-child {
+    border-bottom: none;
+  }
+  input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    margin-right: 12px;
+    cursor: pointer;
+  }
+  label {
+    font-size: 16px;
+    cursor: pointer;
+    user-select: none;
+  }
+  li.done label {
+    text-decoration: line-through;
+    color: #aaa;
+  }
+  .summary {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 14px;
+    color: #666;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>わたしの習慣トラッカー</h1>
+    <div class="date" id="today"></div>
+    <ul id="habit-list">
+      <li>
+        <input type="checkbox" id="exercise">
+        <label for="exercise">運動</label>
+      </li>
+      <li>
+        <input type="checkbox" id="reading">
+        <label for="reading">読書</label>
+      </li>
+      <li>
+        <input type="checkbox" id="sleep">
+        <label for="sleep">早寝</label>
+      </li>
+    </ul>
+    <div class="summary" id="summary"></div>
+  </div>
+
+<script>
+  const habits = ["exercise", "reading", "sleep"];
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const storageKey = "habit-tracker-" + todayKey;
+
+  document.getElementById("today").textContent = todayKey;
+
+  const saved = JSON.parse(localStorage.getItem(storageKey) || "{}");
+
+  function updateSummary() {
+    const checkedCount = habits.filter(id => document.getElementById(id).checked).length;
+    document.getElementById("summary").textContent = `${checkedCount} / ${habits.length} 達成`;
+  }
+
+  habits.forEach(id => {
+    const checkbox = document.getElementById(id);
+    checkbox.checked = !!saved[id];
+    checkbox.closest("li").classList.toggle("done", checkbox.checked);
+
+    checkbox.addEventListener("change", () => {
+      const state = JSON.parse(localStorage.getItem(storageKey) || "{}");
+      state[id] = checkbox.checked;
+      localStorage.setItem(storageKey, JSON.stringify(state));
+      checkbox.closest("li").classList.toggle("done", checkbox.checked);
+      updateSummary();
+    });
+  });
+
+  updateSummary();
+</script>
+</body>
+</html>
