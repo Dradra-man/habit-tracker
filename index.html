@@ -93,16 +93,42 @@
   .bar {
     width: 16px;
     min-height: 2px;
-    background: #cfe0f5;
+    display: flex;
+    flex-direction: column-reverse;
+    background: #eee;
     border-radius: 4px 4px 0 0;
+    overflow: hidden;
   }
   .bar.today {
-    background: #1a73e8;
+    outline: 2px solid #1a73e8;
+    outline-offset: 1px;
+  }
+  .bar-segment {
+    flex: 1;
   }
   .bar-label {
     margin-top: 4px;
     font-size: 11px;
     color: #999;
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 14px;
+    margin-top: 12px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    color: #666;
+  }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 4px;
   }
 </style>
 </head>
@@ -124,13 +150,42 @@
         <input type="checkbox" id="sleep">
         <label for="sleep">早寝</label>
       </li>
+      <li>
+        <input type="checkbox" id="study">
+        <label for="study">勉強</label>
+      </li>
+      <li>
+        <input type="checkbox" id="housework">
+        <label for="housework">家事</label>
+      </li>
+      <li>
+        <input type="checkbox" id="childcare">
+        <label for="childcare">育児</label>
+      </li>
     </ul>
     <div class="chart-title">直近7日間の達成</div>
     <div class="chart" id="chart"></div>
+    <div class="legend" id="legend"></div>
   </div>
 
 <script>
-  const habits = ["exercise", "reading", "sleep"];
+  const habits = ["exercise", "reading", "sleep", "study", "housework", "childcare"];
+  const habitLabels = {
+    exercise: "運動",
+    reading: "読書",
+    sleep: "早寝",
+    study: "勉強",
+    housework: "家事",
+    childcare: "育児",
+  };
+  const habitColors = {
+    exercise: "#4285f4",
+    reading: "#34a853",
+    sleep: "#fbbc05",
+    study: "#ea4335",
+    housework: "#a142f4",
+    childcare: "#00acc1",
+  };
   const todayKey = new Date().toISOString().slice(0, 10);
   const storageKey = "habit-tracker-" + todayKey;
 
@@ -143,9 +198,13 @@
     document.getElementById("summary").textContent = `今日の達成：${checkedCount} / ${habits.length}`;
   }
 
-  function getDailyCount(dateKey) {
+  function getDailyCheckedHabits(dateKey) {
     const data = JSON.parse(localStorage.getItem("habit-tracker-" + dateKey) || "{}");
-    return habits.filter(id => data[id]).length;
+    return habits.filter(id => data[id]);
+  }
+
+  function getDailyCount(dateKey) {
+    return getDailyCheckedHabits(dateKey).length;
   }
 
   function getLast7DaysData() {
@@ -155,7 +214,8 @@
       d.setDate(d.getDate() - i);
       const dateKey = d.toISOString().slice(0, 10);
       const label = `${d.getMonth() + 1}/${d.getDate()}`;
-      result.push({ date: dateKey, label, count: getDailyCount(dateKey) });
+      const checkedHabits = getDailyCheckedHabits(dateKey);
+      result.push({ date: dateKey, label, count: checkedHabits.length, checkedHabits });
     }
     return result;
   }
@@ -171,6 +231,13 @@
       bar.className = "bar" + (item.date === todayKey ? " today" : "");
       bar.style.height = `${(item.count / habits.length) * 100}%`;
 
+      item.checkedHabits.forEach(id => {
+        const segment = document.createElement("div");
+        segment.className = "bar-segment";
+        segment.style.background = habitColors[id];
+        bar.appendChild(segment);
+      });
+
       const label = document.createElement("div");
       label.className = "bar-label";
       label.textContent = item.label;
@@ -178,6 +245,23 @@
       wrap.appendChild(bar);
       wrap.appendChild(label);
       chartEl.appendChild(wrap);
+    });
+  }
+
+  function renderLegend() {
+    const legendEl = document.getElementById("legend");
+    legendEl.innerHTML = "";
+    habits.forEach(id => {
+      const item = document.createElement("div");
+      item.className = "legend-item";
+
+      const dot = document.createElement("span");
+      dot.className = "legend-dot";
+      dot.style.background = habitColors[id];
+
+      item.appendChild(dot);
+      item.appendChild(document.createTextNode(habitLabels[id]));
+      legendEl.appendChild(item);
     });
   }
 
@@ -198,6 +282,7 @@
 
   updateSummary();
   renderChart();
+  renderLegend();
 </script>
 </body>
 </html>
