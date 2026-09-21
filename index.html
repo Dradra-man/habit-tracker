@@ -62,7 +62,7 @@
     color: #aaa;
   }
   .summary {
-    margin-top: 20px;
+    margin-bottom: 16px;
     text-align: center;
     font-size: 14px;
     color: #666;
@@ -73,6 +73,7 @@
   <div class="card">
     <h1>わたしの習慣トラッカー</h1>
     <div class="date" id="today"></div>
+    <div class="summary" id="summary"></div>
     <ul id="habit-list">
       <li>
         <input type="checkbox" id="exercise">
@@ -87,7 +88,6 @@
         <label for="sleep">早寝</label>
       </li>
     </ul>
-    <div class="summary" id="summary"></div>
   </div>
 
 <script>
@@ -101,7 +101,7 @@
 
   function updateSummary() {
     const checkedCount = habits.filter(id => document.getElementById(id).checked).length;
-    document.getElementById("summary").textContent = `${checkedCount} / ${habits.length} 達成`;
+    document.getElementById("summary").textContent = `今日の達成：${checkedCount} / ${habits.length}`;
   }
 
   habits.forEach(id => {
