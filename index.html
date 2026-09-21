@@ -67,6 +67,43 @@
     font-size: 14px;
     color: #666;
   }
+  .chart-title {
+    margin-top: 24px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #666;
+    text-align: center;
+  }
+  .chart {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    height: 100px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 4px;
+  }
+  .bar-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    flex: 1;
+    height: 100%;
+  }
+  .bar {
+    width: 16px;
+    min-height: 2px;
+    background: #cfe0f5;
+    border-radius: 4px 4px 0 0;
+  }
+  .bar.today {
+    background: #1a73e8;
+  }
+  .bar-label {
+    margin-top: 4px;
+    font-size: 11px;
+    color: #999;
+  }
 </style>
 </head>
 <body>
@@ -88,6 +125,8 @@
         <label for="sleep">早寝</label>
       </li>
     </ul>
+    <div class="chart-title">直近7日間の達成</div>
+    <div class="chart" id="chart"></div>
   </div>
 
 <script>
@@ -104,6 +143,44 @@
     document.getElementById("summary").textContent = `今日の達成：${checkedCount} / ${habits.length}`;
   }
 
+  function getDailyCount(dateKey) {
+    const data = JSON.parse(localStorage.getItem("habit-tracker-" + dateKey) || "{}");
+    return habits.filter(id => data[id]).length;
+  }
+
+  function getLast7DaysData() {
+    const result = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateKey = d.toISOString().slice(0, 10);
+      const label = `${d.getMonth() + 1}/${d.getDate()}`;
+      result.push({ date: dateKey, label, count: getDailyCount(dateKey) });
+    }
+    return result;
+  }
+
+  function renderChart() {
+    const chartEl = document.getElementById("chart");
+    chartEl.innerHTML = "";
+    getLast7DaysData().forEach(item => {
+      const wrap = document.createElement("div");
+      wrap.className = "bar-wrap";
+
+      const bar = document.createElement("div");
+      bar.className = "bar" + (item.date === todayKey ? " today" : "");
+      bar.style.height = `${(item.count / habits.length) * 100}%`;
+
+      const label = document.createElement("div");
+      label.className = "bar-label";
+      label.textContent = item.label;
+
+      wrap.appendChild(bar);
+      wrap.appendChild(label);
+      chartEl.appendChild(wrap);
+    });
+  }
+
   habits.forEach(id => {
     const checkbox = document.getElementById(id);
     checkbox.checked = !!saved[id];
@@ -115,10 +192,12 @@
       localStorage.setItem(storageKey, JSON.stringify(state));
       checkbox.closest("li").classList.toggle("done", checkbox.checked);
       updateSummary();
+      renderChart();
     });
   });
 
   updateSummary();
+  renderChart();
 </script>
 </body>
 </html>
